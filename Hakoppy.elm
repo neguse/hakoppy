@@ -132,8 +132,8 @@ initPipe dr =
         pipeD = 15
     in
         [
-            {p | y <- 0, h <- centerY - pipeD, throughed <- True }, 
-            {p | y <- centerY + pipeD, h <- imagH - (centerY + pipeD)  }
+            {p | y = 0, h = centerY - pipeD, throughed = True }, 
+            {p | y = centerY + pipeD, h = imagH - (centerY + pipeD)  }
         ]
 
 
@@ -165,7 +165,7 @@ initGen = 100
 updateInit : Inputs -> Model -> Model
 updateInit inputs model =
     if inputs.keys then
-       { model | state <- Running, hako <- hop True model.hako }
+       { model | state = Running, hako = hop True model.hako }
    else model
 
 
@@ -184,11 +184,11 @@ updateRunning inputs model =
        (pipes'', scoreAcc) = (throughPipe pipes' hako')
    in let
        model' = { model |
-            hako <- hako''
-        ,   pipes <- pipes''
-        ,   gen <- if gen' < 0 then initGen else gen'
-        ,   score <- model.score + scoreAcc
-        ,   seed <- seed'
+            hako = hako''
+        ,   pipes = pipes''
+        ,   gen = if gen' < 0 then initGen else gen'
+        ,   score = model.score + scoreAcc
+        ,   seed = seed'
         }
       in
          if model'.hako.dead && inputs.keys then initModel else model'
@@ -205,7 +205,7 @@ throughPipe pipes hako =
             let throughed = not p.throughed && hako.x > p.x
             in let
                 (pipes', scoreAdd') = (throughPipe xs hako)
-                p' = { p | throughed <- p.throughed || throughed }
+                p' = { p | throughed = p.throughed || throughed }
             in
                (p' :: pipes', scoreAdd' + if throughed then 1 else 0)
 
@@ -231,10 +231,10 @@ updateHako inputs ground hako =
 hop : Bool -> Hako -> Hako
 hop keys hako =
   if keys && not hako.hopping && not hako.dead then
-      { hako | vy <- 2, hopping <- True }
+      { hako | vy = 2, hopping = True }
 
   else if not keys && hako.hopping then
-      { hako | hopping <- False }
+      { hako | hopping = False }
 
   else
       hako
@@ -242,19 +242,19 @@ hop keys hako =
 gravity : Float -> Hako -> Hako
 gravity dt hako =
   { hako |
-      vy <- if hako.y > 0 then hako.vy - dt/9 else 0
+      vy = if hako.y > 0 then hako.vy - dt/9 else 0
   }
 
 
 physics dt o =
   { o |
-    x <- o.x + dt * o.vx,
-    y <- o.y + dt * o.vy
+    x = o.x + dt * o.vx,
+    y = o.y + dt * o.vy
   }
 
 
 upperGround g o =
-    { o | y <- if o.y < g.y + g.h then g.y + g.h else o.y }
+    { o | y = if o.y < g.y + g.h then g.y + g.h else o.y }
 
 
 isInside : Pipe -> Bool
@@ -303,7 +303,7 @@ collide pipes area hako =
         collided = (List.any (collideObj hako) pipes) || not (collideObj hako area)
     in
         if not hako.dead && collided then
-       { hako | dead <- True, color <- hako.deadColor, vy <- 0.0 }
+       { hako | dead = True, color = hako.deadColor, vy = 0.0 }
        else hako
 
 -- VIEW
@@ -403,5 +403,8 @@ input =
   let
     delta = Signal.map (\t -> t/20) (fps 30)
   in
-    Signal.map keyPressured (Signal.foldp keyPressure initInputs (Signal.sampleOn delta (Inputs <~ delta ~ Mouse.isDown)))
+    Signal.map keyPressured
+      (Signal.foldp keyPressure initInputs
+        (Signal.sampleOn delta
+          (Signal.map2 Inputs delta Mouse.isDown)))
 
